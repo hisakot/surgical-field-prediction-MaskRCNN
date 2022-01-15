@@ -206,6 +206,7 @@ if __name__ == '__main__':
     NUM_EPOCHS = 100
     BATCH_SIZE = 2
     LEARNING_RATE = 1e-4
+    TRAINING_IMG_PATH = glob.glob("../breast_surgery/*.png")
     save_model_path ="./models/cutting_area/model.pth"
 
     parser = argparse.ArgumentParser(description='Process some integers.')
@@ -216,7 +217,7 @@ if __name__ == '__main__':
     device = torch.device('cuda')
 
     # open via json file
-    tmp = open('../cutting_area_data/via_annotation_breast_surgery_parts_add2class.json', 'r')
+    tmp = open('../via_annotation_breast_surgery_parts_add2class.json', 'r')
     annotation = json.load(tmp)
     tmp.close()
 
@@ -225,10 +226,9 @@ if __name__ == '__main__':
     model.to(device)
     model = torch.nn.DataParallel(model)
 
-    img_paths = glob.glob("../cutting_area_data/breast_surgery/*.png")
     if not args.evaluation:
         # dataset
-        dataset = Dataset(img_paths, annotation, is_train=True)
+        dataset = Dataset(TRAINING_IMG_PATH, annotation, is_train=True)
         train_size = int(len(dataset) * 0.7)
         test_size = len(dataset) - train_size
         train, test = torch.utils.data.random_split(dataset, [train_size, test_size])
@@ -275,15 +275,15 @@ if __name__ == '__main__':
             cv.rectangle(img, (boxes[0]), (boxes[1]), (b, g, r), thickness=2)
             return coloured_mask
 
-        img_paths = glob.glob("../main20200214_1/org_imgs/*.png")
+        TEST_IMG_PATH = glob.glob("../main20200214_1/org_imgs/*.png")
         model.load_state_dict(torch.load("./models/86", map_location=device))
 #model.load_state_dict(torch.load(save_model_path, map_location=device))
         model.eval()
         confidence = 0.3
-        for idx in tqdm(range(len(img_paths))):
+        for idx in tqdm(range(len(TEST_IMG_PATH))):
             # Prediction
 
-            img_path = img_paths[idx]
+            img_path = TEST_IMG_PATH[idx]
             img = Image.open(img_path)
             transform = T.Compose([T.ToTensor()])
             img = torchvision.transforms.functional.to_tensor(img)
@@ -322,5 +322,5 @@ if __name__ == '__main__':
 # img = np.zeros((960, 540))
             img = cv.resize(img, (960, 540))
             only_mask = cv.resize(only_mask, (960, 540))
-            cv.imwrite('../main20200214_1/2class_cutting_area/'+img_paths[idx].split(os.sep)[-1], img)
-# cv.imwrite('../main20170707/cutting_part/'+img_paths[idx].split(os.sep)[-1], only_mask)
+            cv.imwrite('../main20200214_1/2class_cutting_area/'+TEST_IMG_PATH[idx].split(os.sep)[-1], img)
+# cv.imwrite('../main20170707/cutting_part/'+TEST_IMG_PATH[idx].split(os.sep)[-1], only_mask)
