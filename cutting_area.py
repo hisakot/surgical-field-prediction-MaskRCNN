@@ -118,7 +118,7 @@ class Dataset(object):
         return len(self.img_paths)
 
 def get_model_instance_segmentation(num_classes):
-    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
+    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=False)
     
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
@@ -203,7 +203,7 @@ def tester(test, model):
 if __name__ == '__main__':
     CLASS_NAMES = ['background', 'muscle', 'adipose', 'dermal']
     NUM_CLASSES = len(CLASS_NAMES)
-    NUM_EPOCHS = 100
+    NUM_EPOCHS = 1000
     BATCH_SIZE = 2
     LEARNING_RATE = 1e-4
     save_model_path ="./models/cutting_area/model.pth"
@@ -241,7 +241,7 @@ if __name__ == '__main__':
         writer = SummaryWriter(log_dir="./logs")
 
         # Training
-        early_stopping = [np.inf, 5, 0]
+        early_stopping = [np.inf, 50, 0]
         for epoch in range(NUM_EPOCHS):
             train_loss = trainer(train, model, optimizer)
             writer.add_scalar("Train Loss", train_loss, epoch + 1)
@@ -251,15 +251,15 @@ if __name__ == '__main__':
             torch.save(model.state_dict(), "./models/" + str(epoch + 1))
 
             # early stopping
-#            if test_loss < early_stopping[0]:
-#                early_stopping[0] = test_loss
-#                early_stopping[-1] = 0
-#                torch.save(model.state_dict(), save_model_path)
-#                print(early_stopping)
-#            else:
-#                early_stopping[-1] += 1
-#                if early_stopping[-1] == early_stopping[1]:
-#                    break
+            if test_loss < early_stopping[0]:
+                early_stopping[0] = test_loss
+                early_stopping[-1] = 0
+                torch.save(model.state_dict(), save_model_path)
+                print(early_stopping)
+            else:
+                early_stopping[-1] += 1
+                if early_stopping[-1] == early_stopping[1]:
+                    break
 
     else:
         def get_coloured_mask(mask, pred_cls, boxes):
@@ -275,18 +275,22 @@ if __name__ == '__main__':
             cv.rectangle(img, (boxes[0]), (boxes[1]), (b, g, r), thickness=2)
             return coloured_mask
 
-        img_paths = glob.glob("../main20200214_1/org_imgs/*.png")
-        model.load_state_dict(torch.load("./models/82", map_location=device))
+        img_paths = glob.glob("../main20200214_2/org_imgs/*.png")
+        model.load_state_dict(torch.load(save_model_path, map_location=device))
 #model.load_state_dict(torch.load(save_model_path, map_location=device))
         model.eval()
-        confidence = 0.3
+        confidence = 0.5
         for idx in tqdm(range(len(img_paths))):
             # Prediction
 
             img_path = img_paths[idx]
-            img = Image.open(img_path)
-            transform = T.Compose([T.ToTensor()])
-            img = torchvision.transforms.functional.to_tensor(img)
+            img = cv.imread(img_path)
+            img = img / 255.
+            img = img.transpose(2,0,1)
+            img = torch.from_numpy(img.astype(np.float32))
+#img = Image.open(img_path)
+#transform = T.Compose([T.ToTensor()])
+#img = torchvision.transforms.functional.to_tensor(img)
             pred = model([img.to(device)])
 
             pred_score = list(pred[0]['scores'].detach().cpu().numpy())
@@ -311,8 +315,19 @@ if __name__ == '__main__':
             img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
             #img = np.ones((img.shape[0], img.shape[1], 3), dtype=np.uint8)
 
+            # area
+            muscle = 0
+            adipose = 0
+            dermal = 0
+
             only_mask = np.zeros((960, 540))
             for i in range(len(masks)):
+                if pred_cls[i] == "muscle":
+                    muscle += np.count_nonzero(masks[i] == True)
+                elif pred_cls[i] == "adipose":
+                    adipose += np.count_nonzero(masks[i] == True)
+                elif pred_cls[i] == "dermal":
+                    dermal += np.count_nonzero(masks[i] == True)
                 rgb_mask = get_coloured_mask(masks[i], pred_cls[i], boxes[i])
                 only_mask = cv.addWeighted(rgb_mask, 1, rgb_mask, 1, 0)
                 img = cv.addWeighted(img, 1, rgb_mask, 0.5, 0)
@@ -322,5 +337,11 @@ if __name__ == '__main__':
 # img = np.zeros((960, 540))
             img = cv.resize(img, (960, 540))
             only_mask = cv.resize(only_mask, (960, 540))
-            cv.imwrite('../main20200214_1/cutting_part_blend/'+img_paths[idx].split(os.sep)[-1], img)
+            cv.imwrite('../main20200214_2/cutting_part_blend/'+img_paths[idx].split(os.sep)[-1], img)
 # cv.imwrite('../main20170707/cutting_part/'+img_paths[idx].split(os.sep)[-1], only_mask)
+
+            whole = 960 * 540
+            area = np.array([[idx+1, muscle / whole, adipose / whole, dermal / whole]])
+            print(area)
+            with open("opened_area.csv", "a") as f:
+                np.savetxt(f, area, delimiter=",", fmt="%.4f")

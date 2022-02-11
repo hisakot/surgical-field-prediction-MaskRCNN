@@ -118,7 +118,7 @@ class Dataset(object):
         return len(self.img_paths)
 
 def get_model_instance_segmentation(num_classes):
-    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
+    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=False)
     
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
@@ -203,11 +203,10 @@ def tester(test, model):
 if __name__ == '__main__':
     CLASS_NAMES = ['background', 'muscle', 'adipose', 'dermal', 'skin', 'opened']
     NUM_CLASSES = len(CLASS_NAMES)
-    NUM_EPOCHS = 100
+    NUM_EPOCHS = 1000
     BATCH_SIZE = 2
     LEARNING_RATE = 1e-4
-    TRAINING_IMG_PATH = glob.glob("../breast_surgery/*.png")
-    save_model_path ="./models/cutting_area/model.pth"
+    save_model_path ="./models/2class/model.pth"
 
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--evaluation', action='store_true')
@@ -217,7 +216,7 @@ if __name__ == '__main__':
     device = torch.device('cuda')
 
     # open via json file
-    tmp = open('../via_annotation_breast_surgery_parts_add2class.json', 'r')
+    tmp = open('../cutting_area_data/via_annotation_breast_surgery_parts_add2class.json', 'r')
     annotation = json.load(tmp)
     tmp.close()
 
@@ -226,9 +225,10 @@ if __name__ == '__main__':
     model.to(device)
     model = torch.nn.DataParallel(model)
 
+    img_paths = glob.glob("../cutting_area_data/breast_surgery/*.png")
     if not args.evaluation:
         # dataset
-        dataset = Dataset(TRAINING_IMG_PATH, annotation, is_train=True)
+        dataset = Dataset(img_paths, annotation, is_train=True)
         train_size = int(len(dataset) * 0.7)
         test_size = len(dataset) - train_size
         train, test = torch.utils.data.random_split(dataset, [train_size, test_size])
@@ -241,25 +241,25 @@ if __name__ == '__main__':
         writer = SummaryWriter(log_dir="./logs")
 
         # Training
-        early_stopping = [np.inf, 5, 0]
+        early_stopping = [np.inf, 50, 0]
         for epoch in range(NUM_EPOCHS):
             train_loss = trainer(train, model, optimizer)
             writer.add_scalar("Train Loss", train_loss, epoch + 1)
             with torch.no_grad():
                 test_loss = tester(test, model)
             writer.add_scalar("Valid Loss", test_loss, epoch + 1)
-            torch.save(model.state_dict(), "./models/" + str(epoch + 1))
 
             # early stopping
-#            if test_loss < early_stopping[0]:
-#                early_stopping[0] = test_loss
-#                early_stopping[-1] = 0
-#                torch.save(model.state_dict(), save_model_path)
-#                print(early_stopping)
-#            else:
-#                early_stopping[-1] += 1
-#                if early_stopping[-1] == early_stopping[1]:
-#                    break
+            if test_loss < early_stopping[0]:
+                early_stopping[0] = test_loss
+                early_stopping[-1] = 0
+#torch.save(model.state_dict(), save_model_path)
+                torch.save(model.state_dict(), "./models/2class/" + str(epoch + 1))
+                print(early_stopping)
+            else:
+                early_stopping[-1] += 1
+                if early_stopping[-1] == early_stopping[1]:
+                    break
 
     else:
         def get_coloured_mask(mask, pred_cls, boxes):
@@ -275,15 +275,15 @@ if __name__ == '__main__':
             cv.rectangle(img, (boxes[0]), (boxes[1]), (b, g, r), thickness=2)
             return coloured_mask
 
-        TEST_IMG_PATH = glob.glob("../main20200214_1/org_imgs/*.png")
-        model.load_state_dict(torch.load("./models/86", map_location=device))
+        img_paths = glob.glob("../main20200214_2/org_imgs/*.png")
+        model.load_state_dict(torch.load("./models/2class/114", map_location=device))
 #model.load_state_dict(torch.load(save_model_path, map_location=device))
         model.eval()
         confidence = 0.3
-        for idx in tqdm(range(len(TEST_IMG_PATH))):
+        for idx in tqdm(range(len(img_paths))):
             # Prediction
 
-            img_path = TEST_IMG_PATH[idx]
+            img_path = img_paths[idx]
             img = Image.open(img_path)
             transform = T.Compose([T.ToTensor()])
             img = torchvision.transforms.functional.to_tensor(img)
@@ -322,5 +322,5 @@ if __name__ == '__main__':
 # img = np.zeros((960, 540))
             img = cv.resize(img, (960, 540))
             only_mask = cv.resize(only_mask, (960, 540))
-            cv.imwrite('../main20200214_1/2class_cutting_area/'+TEST_IMG_PATH[idx].split(os.sep)[-1], img)
-# cv.imwrite('../main20170707/cutting_part/'+TEST_IMG_PATH[idx].split(os.sep)[-1], only_mask)
+            cv.imwrite('../main20200214_2/2class/'+img_paths[idx].split(os.sep)[-1], img)
+# cv.imwrite('../main20170707/cutting_part/'+img_paths[idx].split(os.sep)[-1], only_mask)
