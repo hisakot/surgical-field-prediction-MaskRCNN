@@ -225,8 +225,8 @@ if __name__ == '__main__':
     model.to(device)
     model = torch.nn.DataParallel(model)
 
-    img_paths = glob.glob("../cutting_area_data/breast_surgery/*.png")
     if not args.evaluation:
+        img_paths = glob.glob("../cutting_area_data/breast_surgery/*.png")
         # dataset
         dataset = Dataset(img_paths, annotation, is_train=True)
         train_size = int(len(dataset) * 0.7)
@@ -277,7 +277,6 @@ if __name__ == '__main__':
 
         img_paths = glob.glob("../main20200214_2/org_imgs/*.png")
         model.load_state_dict(torch.load(save_model_path, map_location=device))
-#model.load_state_dict(torch.load(save_model_path, map_location=device))
         model.eval()
         confidence = 0.5
         for idx in tqdm(range(len(img_paths))):
