@@ -10,6 +10,7 @@ import torch
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
+from torch.utils.tensorboard import SummaryWriter
 
 sys.path.append('../vision/references/detection'.replace('/', os.sep))
 import engine, utils
@@ -38,10 +39,10 @@ def random_crop(img, masks, boxes, p):
             if distance_x < size_x and distance_y < size_y:
 	        # img
                 crop_img = img[buf_y:buf_y+810, buf_x:buf_x+1440, :]
-                img = cv.resize(crop_img, (img.shape[1], img.shape[0]))
+                img = cv2.resize(crop_img, (img.shape[1], img.shape[0]))
 	        # masks
                 crop_masks[idx] = masks[idx, buf_y:buf_y+810, buf_x:buf_x+1440]
-                masks[idx] = cv.resize(crop_masks[idx], (img.shape[1], img.shape[0]))
+                masks[idx] = cv2.resize(crop_masks[idx], (img.shape[1], img.shape[0]))
                 # boxes
                 boxes[idx][0] = max(buf_x, boxes[idx][0])
                 boxes[idx][1] = max(buf_y, boxes[idx][1])
@@ -114,6 +115,9 @@ class Dataset(object):
         }
 
         return img, target
+
+    def __len__(self):
+        return len(self.img_paths)
 
 def trainer(trainloader, model, optimizer):
     print("---------- Start Training ----------")

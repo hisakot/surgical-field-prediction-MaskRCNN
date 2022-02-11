@@ -1,4 +1,4 @@
-import argparse, os, glob, sys, json, random, tqdm
+import argparse, os, glob, sys, json, random
 import numpy as np
 from matplotlib import pyplot as plt
 import cv2 as cv
@@ -50,11 +50,12 @@ def random_crop(img, masks, boxes, p):
                 boxes[idx][3] = min(buf_y+810, boxes[idx][3])
     return img, masks, boxes
 
-def illuminate(img):
-    alpha = random.uniform(0.5, 1.5)
-    beta = random.uniform(-50, 50)
-    img = alpha * img + beta
-    img = np.clip(img, 0, 255).astype(np.uint8)
+def illuminate(img, p):
+    if random.random() < p:
+        alpha = random.uniform(0.5, 1.5)
+        beta = random.uniform(-50, 50)
+        img = alpha * img + beta
+        img = np.clip(img, 0, 255).astype(np.uint8)
     return img
 
 class Dataset(object):
@@ -67,9 +68,11 @@ class Dataset(object):
         self.is_train = is_train
 
     def __getitem__(self, idx):
+        # load img
         img_path = self.img_paths[idx]
         img = cv.imread(img_path, 1)
 
+        # load annotation
         regions = self.annotation[img_path.split(os.sep)[-1]]["regions"]
         num_objs = len(regions)
 
@@ -93,8 +96,7 @@ class Dataset(object):
         if self.is_train:
             img, masks, boxes = horizontal_flip(img, masks, boxes, 0.5)
             img, masks, boxes = random_crop(img, masks, boxes, 0.5)
-            if random.random() < 0.5:
-                img = illuminate(img)
+            img = illuminate(img, p=0.5)
             if random.random() < 0.5:
                 img = cv.GaussianBlur(img, (5, 5), 0)
 
@@ -229,6 +231,8 @@ if __name__ == '__main__':
         img_paths = glob.glob("../cutting_area_data/breast_surgery/*.png")
         # dataset
         dataset = Dataset(img_paths, annotation, is_train=True)
+        print(len(dataset))
+        exit()
         train_size = int(len(dataset) * 0.7)
         test_size = len(dataset) - train_size
         train, test = torch.utils.data.random_split(dataset, [train_size, test_size])
@@ -278,10 +282,10 @@ if __name__ == '__main__':
         img_paths = glob.glob("../main20200214_2/org_imgs/*.png")
         model.load_state_dict(torch.load(save_model_path, map_location=device))
         model.eval()
+
+        # Prediction
         confidence = 0.5
         for idx in tqdm(range(len(img_paths))):
-            # Prediction
-
             img_path = img_paths[idx]
             img = cv.imread(img_path)
             img = img / 255.

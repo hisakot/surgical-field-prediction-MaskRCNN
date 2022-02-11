@@ -1,3 +1,4 @@
+import argparse
 import cv2
 import glob
 import numpy as np
@@ -5,7 +6,7 @@ import os
 
 import torch
 import torchvision
-import tqdm
+from tqdm import tqdm
 
 import common
 
@@ -34,13 +35,8 @@ def get_binary_mask(mask, pred_cls):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--model_name', required=True, action='store_true')
+    parser.add_argument('--model_name', required=True)
     args = parser.parse_args()
-
-    # open via json file
-    tmp = open(common.ANNOTATION_FILE, 'r')
-    annotation = json.load(tmp)
-    tmp.close()
 
     # model and device
     best_model = common.SAVE_MODEL_DIR + args.model_name
@@ -51,6 +47,7 @@ if __name__ == '__main__':
 
     # data loader
     img_paths = glob.glob(common.TEST_IMG_PATH)
+    print(range(len(img_paths)))
 
     # Prediction
     confidence = 0.5
