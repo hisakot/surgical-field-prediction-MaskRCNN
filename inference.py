@@ -19,7 +19,7 @@ def get_coloured_mask(mask, pred_cls, boxes):
     b[mask == 1], g[mask == 1], r[mask == 1] = colours[common.CLASS_NAMES.index(pred_cls)]
     coloured_mask = np.stack([b, g, r], axis=2)
     
-    b, g, r = colours[CLASS_NAMES.index(pred_cls)]
+    b, g, r = colours[common.CLASS_NAMES.index(pred_cls)]
     cv2.rectangle(img, (boxes[0]), (boxes[1]), (b, g, r), thickness=2)
     return coloured_mask
 
@@ -47,7 +47,6 @@ if __name__ == '__main__':
 
     # data loader
     img_paths = glob.glob(common.TEST_IMG_PATH)
-    print(range(len(img_paths)))
 
     # Prediction
     confidence = 0.5
@@ -80,7 +79,7 @@ if __name__ == '__main__':
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         binary_mask = np.zeros((img.shape[0], img.shape[1], common.NUM_CLASSES))
-        color_mask = np.zeros((common.IMG_W, common.IMG_H))
+        color_mask = np.zeros((common.IMG_H, common.IMG_W, 3), dtype=np.uint8)
 
         muscle = 0
         adipose = 0
@@ -95,20 +94,20 @@ if __name__ == '__main__':
                 dermal += np.count_nonzero(masks[i] == True)
 
             rgb_mask = get_coloured_mask(masks[i], pred_cls[i], boxes[i])
-            color_mask = cv2.addWeighted(rgb_mask, 1, rgb_mask, 1, 0)
+            color_mask = cv2.addWeighted(color_mask, 1, rgb_mask, 1, 0)
 
             bi_mask = get_binary_mask(masks[i], pred_cls[i])
-            binary_mask[:, :, common.CLASS_NAMES.index(pred_cls)] = bi_mask[0]
+            binary_mask[:, :, common.CLASS_NAMES.index(pred_cls[i])] += bi_mask[:, :, 0]
 
         # save predicted mask
         color_mask = cv2.resize(color_mask, (common.IMG_W, common.IMG_H))
         cv2.imwrite(common.SAVE_COLOR_DIR + img_paths[idx].split(os.sep)[-1], color_mask)
+        binary_mask = binary_mask[:, :, 1:] # dim4 -> dim3 to remove background rayer
         binary_mask = cv2.resize(binary_mask, (common.IMG_W, common.IMG_H))
         cv2.imwrite(common.SAVE_BINARY_DIR + img_paths[idx].split(os.sep)[-1], binary_mask)
 
         # calculate area size
         whole = common.IMG_W * common.IMG_H
         area = np.array([[idx+1, muscle / whole * 100, adipose / whole * 100, dermal / whole * 100]])
-        print(area)
         with open("opened_area.csv", "a") as f:
             np.savetxt(f, area, delimiter=",", fmt="%.4f")

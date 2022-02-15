@@ -19,9 +19,9 @@ SAVE_MODEL_DIR ="./models/"
 ANNOTATION_FILE = "../cutting_area_data/via_annotation_breast_surgery_parts.json"
 
 TRAIN_ORG_IMGS = "../cutting_area_data/breast_surgery/*.png"
-TEST_IMG_PATH = "../main20200214_2/org_imgs/*.png"
-SAVE_COLOR_DIR = "../main20200214_2/cutting_area_color_mask/"
-SAVE_BINARY_DIR = "../main20200214_2/cutting_area_binary_mask/"
+TEST_IMG_PATH = "../main20200214_1/org_imgs/*.png"
+SAVE_COLOR_DIR = "../main20200214_1/cutting_area_color_mask/"
+SAVE_BINARY_DIR = "../main20200214_1/cutting_area_binary_mask/"
 
 IMG_W = 960
 IMG_H = 540
