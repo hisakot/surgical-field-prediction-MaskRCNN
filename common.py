@@ -8,23 +8,22 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
 # CLASS_NAMES = ['background', 'tool']
 # CLASS_NAMES = ['background', 'main', 'assistant']
-# CLASS_NAMES = ['background', 'forceps', 'tweezers', 'electrical-scalpel',
-#                'scalpels', 'hook', 'syringe', 'needle-holder', 'pen']
-CLASS_NAMES = ['background', 'muscle', 'adipose', 'dermal']
+CLASS_NAMES = ['background', 'forceps', 'tweezers', 'electrical-scalpel',
+               'scalpels', 'hook', 'syringe', 'needle-holder', 'pen']
+# CLASS_NAMES = ['background', 'muscle', 'adipose', 'dermal']
 NUM_CLASSES = len(CLASS_NAMES)
 NUM_EPOCHS = 1000
 BATCH_SIZE = 2
 LEARNING_RATE = 1e-4
 SAVE_MODEL_DIR ="./models/"
-ANNOTATION_FILE = "../cutting_area_data/via_annotation_breast_surgery_parts.json"
+# ANNOTATION_FILE = "../cutting_area_data/via_annotation_breast_surgery_parts.json"
+ANNOTATION_FILE = "../tool_data/via_annotation_tools.json"
 
-TRAIN_ORG_IMGS = "../cutting_area_data/breast_surgery/*.png"
-# TEST_IMG_PATH = "../main20200214_1/org_imgs/*.png"
-# SAVE_COLOR_DIR = "../main20200214_1/cutting_area_color_mask/"
-# SAVE_BINARY_DIR = "../main20200214_1/cutting_area_binary_mask/"
-TEST_IMG_PATH = "../cutting_area_data/breast_surgery/*.png"
-SAVE_COLOR_DIR = "../cutting_area_data/cutting_area_color_mask/"
-SAVE_BINARY_DIR = "../cutting_area_data/cutting_area_binary_mask/"
+# TRAIN_ORG_IMGS = "../cutting_area_data/breast_surgery/*.png"
+TRAIN_ORG_IMGS = "../tool_data/org_imgs/*.png"
+TEST_IMG_PATH = "../main20200214_2/org_imgs/*.png"
+SAVE_COLOR_DIR = "../main20200214_2/tool_color_mask/"
+SAVE_BINARY_DIR = "../main20200214_2/tool_binary_mask/"
 
 IMG_W = 960
 IMG_H = 540

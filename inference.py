@@ -14,8 +14,8 @@ def get_coloured_mask(mask, pred_cls, boxes):
     r = np.zeros_like(mask).astype(np.uint8)
     g = np.zeros_like(mask).astype(np.uint8)
     b = np.zeros_like(mask).astype(np.uint8)
-# colours = [[0, 0, 0],[0, 255, 0],[0, 255, 255],[255, 255, 0],[80, 70, 180],[180, 40, 250],[245, 145, 50],[70, 150, 250],[50, 190, 190]] # black, green, yellow, cyan
-    colours = [[0, 0, 0],[0, 255, 0],[255, 0, 0],[0, 255, 255]] # black, green, blue, cyan
+    colours = [[0, 0, 0],[0, 255, 0],[0, 255, 255],[255, 255, 0],[80, 70, 180],[180, 40, 250],[245, 145, 50],[70, 150, 250],[50, 190, 190]]
+#     colours = [[0, 0, 0],[0, 255, 0],[255, 0, 0],[0, 255, 255]] # black, green, blue, yellow
     b[mask == 1], g[mask == 1], r[mask == 1] = colours[common.CLASS_NAMES.index(pred_cls)]
     coloured_mask = np.stack([b, g, r], axis=2)
     
@@ -27,7 +27,7 @@ def get_binary_mask(mask, pred_cls):
     r = np.zeros_like(mask).astype(np.uint8)
     g = np.zeros_like(mask).astype(np.uint8)
     b = np.zeros_like(mask).astype(np.uint8)
-    binary = [255, 0, 0] # black, green, blue, cyan
+    binary = [255, 0, 0]
     b[mask == 1], g[mask == 1], r[mask == 1] = binary
     binary_mask = np.stack([b, g, r], axis=2)
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
         cv2.imwrite(common.SAVE_BINARY_DIR + img_paths[idx].split(os.sep)[-1], binary_mask)
 
         # calculate area size
-        whole = common.IMG_W * common.IMG_H
-        area = np.array([[idx+1, muscle / whole * 100, adipose / whole * 100, dermal / whole * 100]])
-        with open("../cutting_area_data/opened_area.csv", "a") as f:
-            np.savetxt(f, area, delimiter=",", fmt="%.4f")
+#         whole = common.IMG_W * common.IMG_H
+#         area = np.array([[idx+1, muscle / whole * 100, adipose / whole * 100, dermal / whole * 100]])
+#         with open("../cutting_area_data/opened_area.csv", "a") as f:
+#             np.savetxt(f, area, delimiter=",", fmt="%.4f")
