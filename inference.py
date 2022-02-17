@@ -94,6 +94,7 @@ if __name__ == '__main__':
                 dermal += np.count_nonzero(masks[i] == True)
 
             rgb_mask = get_coloured_mask(masks[i], pred_cls[i], boxes[i])
+            rgb_mask = cv2.resize(rgb_mask, (common.IMG_W, common.IMG_H))
             color_mask = cv2.addWeighted(color_mask, 1, rgb_mask, 1, 0)
 
             bi_mask = get_binary_mask(masks[i], pred_cls[i])
@@ -109,5 +110,5 @@ if __name__ == '__main__':
         # calculate area size
         whole = common.IMG_W * common.IMG_H
         area = np.array([[idx+1, muscle / whole * 100, adipose / whole * 100, dermal / whole * 100]])
-        with open("opened_area.csv", "a") as f:
+        with open("../cutting_area_data/opened_area.csv", "a") as f:
             np.savetxt(f, area, delimiter=",", fmt="%.4f")
