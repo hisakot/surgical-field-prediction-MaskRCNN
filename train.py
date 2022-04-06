@@ -27,27 +27,32 @@ def horizontal_flip(img, masks, boxes, p):
     return img, masks, boxes
 
 def random_crop(img, masks, boxes, p):
+    max_buf_x = int(img.shape[1] / 4)
+    max_buf_y = int(img.shape[0] / 4)
+    cropped_w = img.shape[1] - max_buf_x
+    cropped_h = img.shape[0] - max_buf_y
+# print("w:", img.shape[1], max_buf_x, cropped_w, "h:", img.shape[0], max_buf_y, cropped_h)
     if random.random() < p:
-        buf_x = random.randint(0, 480)
-        buf_y = random.randint(0, 270)
-        crop_masks = np.zeros((masks.shape[0], 810, 1440), dtype=np.uint8)
+        buf_x = random.randint(0, max_buf_x)
+        buf_y = random.randint(0, max_buf_y)
+        crop_masks = np.zeros((masks.shape[0], cropped_h, cropped_w), dtype=np.uint8)
         for idx in range(masks.shape[0]):
-            distance_x = abs((boxes[idx][0] + boxes[idx][2]) / 2 - (buf_x + 720))
-            distance_y = abs((boxes[idx][1] + boxes[idx][3]) / 2 - (buf_y + 405))
-            size_x = (boxes[idx][2] - boxes[idx][0]) / 2 + 720
-            size_y = (boxes[idx][3] - boxes[idx][1]) / 2 + 405
+            distance_x = abs((boxes[idx][0] + boxes[idx][2]) / 2 - (buf_x + cropped_w / 2))
+            distance_y = abs((boxes[idx][1] + boxes[idx][3]) / 2 - (buf_y + cropped_h / 2))
+            size_x = (boxes[idx][2] - boxes[idx][0]) / 2 + cropped_w / 2
+            size_y = (boxes[idx][3] - boxes[idx][1]) / 2 + cropped_h / 2
             if distance_x < size_x and distance_y < size_y:
 	        # img
-                crop_img = img[buf_y:buf_y+810, buf_x:buf_x+1440, :]
+                crop_img = img[buf_y:buf_y+cropped_h, buf_x:buf_x+cropped_w, :]
                 img = cv2.resize(crop_img, (img.shape[1], img.shape[0]))
 	        # masks
-                crop_masks[idx] = masks[idx, buf_y:buf_y+810, buf_x:buf_x+1440]
+                crop_masks[idx] = masks[idx, buf_y:buf_y+cropped_h, buf_x:buf_x+cropped_w]
                 masks[idx] = cv2.resize(crop_masks[idx], (img.shape[1], img.shape[0]))
                 # boxes
                 boxes[idx][0] = max(buf_x, boxes[idx][0])
                 boxes[idx][1] = max(buf_y, boxes[idx][1])
-                boxes[idx][2] = min(buf_x+1440, boxes[idx][2])
-                boxes[idx][3] = min(buf_y+810, boxes[idx][3])
+                boxes[idx][2] = min(buf_x+cropped_w, boxes[idx][2])
+                boxes[idx][3] = min(buf_y+cropped_h, boxes[idx][3])
     return img, masks, boxes
 
 def illuminate(img, p):
@@ -90,7 +95,7 @@ class Dataset(object):
             vertex = [[x, y] for x, y in zip(xs, ys)]
             cv2.fillPoly(masks[idx], [np.array(vertex)], 1)
             # label
-            labels[idx] = list(region['region_attributes']['surface'].keys())[0]
+            labels[idx] = list(region['region_attributes'][common.ITEM].keys())[0] # tool, surface
 
         # data augmentation 21/12
         if self.is_train:
