@@ -3,9 +3,11 @@ import glob
 import os
 import numpy as np
 
-org_paths = glob.glob("../cutting_area_data/breast_surgery/*.png")
+import common
+
+org_paths = glob.glob(common.TEST_IMG_PATH)
 org_paths.sort()
-mask_paths = glob.glob("../cutting_area_data/cutting_area_color_mask/*.png")
+mask_paths = glob.glob(common.SAVE_COLOR_DIR + "*.png")
 mask_paths.sort()
 
 #gaze_points = np.loadtxt("./gaze.csv", delimiter=",", skiprows=1, usecols=(1, 2))
@@ -23,4 +25,4 @@ for i, org_path in enumerate(org_paths):
 #		       markerType=cv2.MARKER_CROSS, markerSize=50,
 #		       thickness=10, line_type=cv2.LINE_8)
 
-	cv2.imwrite("../cutting_area_data/cutting_area_blend/" + os.path.basename(org_path), blend_img)
+	cv2.imwrite("E:\/2022-04-22assistant/cutting_area_blend/" + os.path.basename(org_path), blend_img)

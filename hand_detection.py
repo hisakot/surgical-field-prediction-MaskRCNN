@@ -90,7 +90,7 @@ class Dataset(object):
         return len(self.img_paths)
 
 def get_model_instance_segmentation(num_classes):
-    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
+    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=False)
     
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
@@ -237,7 +237,7 @@ if __name__ == '__main__':
             coloured_mask = np.stack([r, g, b], axis=2)
             return coloured_mask
 
-        img_paths = glob.glob("../main20200214/org_imgs/*.png")
+        img_paths = glob.glob("../hand-data/imgs/*.jpg")
         model.load_state_dict(torch.load("model.pth", map_location=device))
         model.eval()
         confidence = 0.5
@@ -279,4 +279,4 @@ if __name__ == '__main__':
             if len(masks) == 0:
                 img = np.zeros((960, 540, 3))
             img = cv.resize(img, (960, 540))
-            cv.imwrite('../main20200214/contour/'+img_paths[idx].split(os.sep)[-1], img)
+            cv.imwrite('../hand-data/inf/'+img_paths[idx].split(os.sep)[-1], img)

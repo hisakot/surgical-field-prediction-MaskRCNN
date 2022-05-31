@@ -6,33 +6,38 @@ import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
-# CLASS_NAMES = ['background', 'tool']
+ITEM = 'tool', #'surface' 'hand'
+# CLASS_NAMES = ['background', 'hand']
 # CLASS_NAMES = ['background', 'main', 'assistant']
-CLASS_NAMES = ['background', 'forceps', 'tweezers', 'electrical-scalpel',
-               'scalpels', 'hook', 'syringe', 'needle-holder', 'pen']
-# CLASS_NAMES = ['background', 'muscle', 'adipose', 'dermal']
+# CLASS_NAMES = ['background', 'forceps', 'tweezers', 'electrical-scalpel',
+#                'scalpel', 'hook', 'syringe', 'needle-holder', 'pen']
+CLASS_NAMES = ['background', 'muscle', 'adipose', 'dermal']
 NUM_CLASSES = len(CLASS_NAMES)
 NUM_EPOCHS = 1000
 BATCH_SIZE = 2
 LEARNING_RATE = 1e-4
 SAVE_MODEL_DIR ="./models/"
-# ANNOTATION_FILE = "../cutting_area_data/via_annotation_breast_surgery_parts.json"
-ANNOTATION_FILE = "../tool_data/via_annotation_tools.json"
+# ANNOTATION_FILE = "../hand-data/via_annotation_hand.json"
+# ANNOTATION_FILE = "../tool_data/annotation_data_multi_tools2.json"
+ANNOTATION_FILE = "../cutting_area_data/via_annotation_breast_surgery_parts.json"
 
-# TRAIN_ORG_IMGS = "../cutting_area_data/breast_surgery/*.png"
-TRAIN_ORG_IMGS = "../tool_data/org_imgs/*.png"
-TEST_IMG_PATH = "../main20200214_2/org_imgs/*.png"
-SAVE_COLOR_DIR = "../main20200214_2/tool_color_mask/"
-SAVE_BINARY_DIR = "../main20200214_2/tool_binary_mask/"
+# TRAIN_ORG_IMGS = "../hand-data/imgs/*.jpg"
+# TRAIN_ORG_IMGS = "../tool_data/breast_surgery2/*.png"
+TRAIN_ORG_IMGS = "../cutting_area_data/breast_surgery_annotation_images/*.png"
+
+# TEST_IMG_PATH = "../main20200214_2/org_imgs2/*.png"
+# TEST_IMG_PATH = "../hand-data/imgs/*.jpg"
+TEST_IMG_PATH = "E:\/2022-04-05assistant/1/org_imgs/*.png"
+
+# SAVE_COLOR_DIR = "../main20200214_2/area_color_mask/"
+# SAVE_COLOR_DIR = "../main20200214_2/tool_color_mask/"
+# SAVE_COLOR_DIR = "../main20200214_2/hand_color_mask/"
+# SAVE_COLOR_DIR = "../hand-data/inf/"
+SAVE_COLOR_DIR = "E:\/2022-04-05assistant/1/cutting_area_color_mask/"
+# SAVE_BINARY_DIR = "../main20200214_2/tool_binary_mask/"
 
 IMG_W = 960
 IMG_H = 540
-
-TRAIN_DATA_IMGS = "../data/tool/annotation_imgs/*.png"
-TEST_DATA_IMGS = "../main20170707/org_imgs/*.png"
-SAVE_NPY_DIR = "../main20170707/multi_channel_tool/"
-SAVE_DIR = "../data/tool/masked/"
-
 
 def setup_device(model):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

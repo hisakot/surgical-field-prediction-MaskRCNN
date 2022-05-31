@@ -1,4 +1,5 @@
 import argparse
+import csv
 import cv2
 import glob
 import numpy as np
@@ -14,13 +15,15 @@ def get_coloured_mask(mask, pred_cls, boxes):
     r = np.zeros_like(mask).astype(np.uint8)
     g = np.zeros_like(mask).astype(np.uint8)
     b = np.zeros_like(mask).astype(np.uint8)
-    colours = [[0, 0, 0],[0, 255, 0],[0, 255, 255],[255, 255, 0],[80, 70, 180],[180, 40, 250],[245, 145, 50],[70, 150, 250],[50, 190, 190]]
-#     colours = [[0, 0, 0],[0, 255, 0],[255, 0, 0],[0, 255, 255]] # black, green, blue, yellow
+#     colours = [[0, 0, 0],[255, 0, 255],[0, 255, 255],[255, 255, 0],[80, 70, 180],[180, 40, 250],[245, 145, 50],[70, 150, 250],[50, 190, 190]]
+#     colours = [[0, 0, 0],[0, 255, 0],[0, 255, 255],[255, 255, 0],[80, 70, 180],[180, 40, 250],[245, 145, 50],[70, 150, 250],[50, 190, 190]]
+    colours = [[0, 0, 0],[0, 255, 0],[255, 0, 0],[0, 255, 255]] # black, green, blue, yellow
     b[mask == 1], g[mask == 1], r[mask == 1] = colours[common.CLASS_NAMES.index(pred_cls)]
     coloured_mask = np.stack([b, g, r], axis=2)
     
-    b, g, r = colours[common.CLASS_NAMES.index(pred_cls)]
-    cv2.rectangle(img, (boxes[0]), (boxes[1]), (b, g, r), thickness=2)
+#     b, g, r = colours[common.CLASS_NAMES.index(pred_cls)]
+#     cv2.rectangle(coloured_mask, (boxes[0]), (boxes[1]), (b, g, r), thickness=2)
+#     cv2.putText(coloured_mask, text=pred_cls, org=boxes[0], fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1.0, color=(b, g, r), thickness=1, lineType=cv2.LINE_AA)
     return coloured_mask
 
 def get_binary_mask(mask, pred_cls):
@@ -84,6 +87,8 @@ if __name__ == '__main__':
         muscle = 0
         adipose = 0
         dermal = 0
+        count_tools = [0] * (common.NUM_CLASSES + 1)
+        count_tools[0] = idx + 1
 
         for i in range(len(masks)):
             if pred_cls[i] == "muscle":
@@ -93,22 +98,32 @@ if __name__ == '__main__':
             elif pred_cls[i] == "dermal":
                 dermal += np.count_nonzero(masks[i] == True)
 
+            # count the number of tools
+            for cls_name in common.CLASS_NAMES:
+                if pred_cls[i] == cls_name:
+                    count_tools[common.CLASS_NAMES.index(cls_name) + 1] += 1
+
             rgb_mask = get_coloured_mask(masks[i], pred_cls[i], boxes[i])
             rgb_mask = cv2.resize(rgb_mask, (common.IMG_W, common.IMG_H))
             color_mask = cv2.addWeighted(color_mask, 1, rgb_mask, 1, 0)
 
-            bi_mask = get_binary_mask(masks[i], pred_cls[i])
-            binary_mask[:, :, common.CLASS_NAMES.index(pred_cls[i])] += bi_mask[:, :, 0]
+#            bi_mask = get_binary_mask(masks[i], pred_cls[i])
+#            binary_mask[:, :, common.CLASS_NAMES.index(pred_cls[i])] += bi_mask[:, :, 0]
 
         # save predicted mask
         color_mask = cv2.resize(color_mask, (common.IMG_W, common.IMG_H))
         cv2.imwrite(common.SAVE_COLOR_DIR + img_paths[idx].split(os.sep)[-1], color_mask)
-        binary_mask = binary_mask[:, :, 1:] # dim4 -> dim3 to remove background rayer
-        binary_mask = cv2.resize(binary_mask, (common.IMG_W, common.IMG_H))
-        cv2.imwrite(common.SAVE_BINARY_DIR + img_paths[idx].split(os.sep)[-1], binary_mask)
+
+#         binary_mask = binary_mask[:, :, 1:] # dim4 -> dim3 to remove background rayer
+#         binary_mask = cv2.resize(binary_mask, (common.IMG_W, common.IMG_H))
+#         cv2.imwrite(common.SAVE_BINARY_DIR + img_paths[idx].split(os.sep)[-1], binary_mask)
 
         # calculate area size
-#         whole = common.IMG_W * common.IMG_H
-#         area = np.array([[idx+1, muscle / whole * 100, adipose / whole * 100, dermal / whole * 100]])
-#         with open("../cutting_area_data/opened_area.csv", "a") as f:
-#             np.savetxt(f, area, delimiter=",", fmt="%.4f")
+        whole = common.IMG_W * common.IMG_H
+        area = np.array([[idx+1, muscle / whole * 100, adipose / whole * 100, dermal / whole * 100]])
+        with open("./opened_area.csv", "a") as f:
+            np.savetxt(f, area, delimiter=",", fmt="%.4f")
+
+        # save counted tools list
+#         with open("count_tool.csv", "a") as f:
+#             csv.writer(f).writerow(count_tools)
