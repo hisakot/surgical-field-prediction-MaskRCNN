@@ -16,14 +16,16 @@ def get_coloured_mask(mask, pred_cls, boxes):
     g = np.zeros_like(mask).astype(np.uint8)
     b = np.zeros_like(mask).astype(np.uint8)
 #     colours = [[0, 0, 0],[255, 0, 255],[0, 255, 255],[255, 255, 0],[80, 70, 180],[180, 40, 250],[245, 145, 50],[70, 150, 250],[50, 190, 190]]
-#     colours = [[0, 0, 0],[0, 255, 0],[0, 255, 255],[255, 255, 0],[80, 70, 180],[180, 40, 250],[245, 145, 50],[70, 150, 250],[50, 190, 190]]
-    colours = [[0, 0, 0],[0, 255, 0],[255, 0, 0],[0, 255, 255]] # black, green, blue, yellow
+    colours = [[0, 0, 0],[0, 255, 0],[0, 255, 255],[255, 255, 0],[80, 70, 180],[180, 40, 250],[245, 145, 50],[70, 150, 250],[50, 190, 190], [255, 0, 0]]
+#     colours = [[0, 0, 0],[0, 255, 0],[255, 0, 0],[0, 255, 255]] # black, green, blue, yellow
     b[mask == 1], g[mask == 1], r[mask == 1] = colours[common.CLASS_NAMES.index(pred_cls)]
     coloured_mask = np.stack([b, g, r], axis=2)
     
-#     b, g, r = colours[common.CLASS_NAMES.index(pred_cls)]
-#     cv2.rectangle(coloured_mask, (boxes[0]), (boxes[1]), (b, g, r), thickness=2)
-#     cv2.putText(coloured_mask, text=pred_cls, org=boxes[0], fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1.0, color=(b, g, r), thickness=1, lineType=cv2.LINE_AA)
+    b, g, r = colours[common.CLASS_NAMES.index(pred_cls)]
+    cv2.rectangle(coloured_mask, (boxes[0]), (boxes[1]), (b, g, r), thickness=2)
+    cv2.putText(coloured_mask, text=pred_cls, org=boxes[0],
+		fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1.0,
+		color=(b, g, r), thickness=1, lineType=cv2.LINE_AA)
     return coloured_mask
 
 def get_binary_mask(mask, pred_cls):

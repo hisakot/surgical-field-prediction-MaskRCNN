@@ -95,7 +95,7 @@ class Dataset(object):
             vertex = [[x, y] for x, y in zip(xs, ys)]
             cv2.fillPoly(masks[idx], [np.array(vertex)], 1)
             # label
-            labels[idx] = list(region['region_attributes'][common.ITEM].keys())[0] # tool, surface
+            labels[idx] = list(region['region_attributes'][common.ITEM[0]].keys())[0] # tool, surface
 
         # data augmentation 21/12
         if self.is_train:
